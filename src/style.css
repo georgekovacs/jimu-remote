@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+/* ── Reusable component classes ─────────────────────────────────────── */
+
+.card {
+  @apply rounded-2xl border border-white/10 bg-zinc-900/60 p-4 shadow-lg shadow-black/20;
+}
+
+.card-title {
+  @apply text-sm font-semibold uppercase tracking-wider text-zinc-400;
+}
+
+/* D-pad buttons: big touch targets, no browser touch gestures. */
+.pad-btn {
+  @apply grid size-16 select-none place-items-center rounded-2xl border border-white/10
+    bg-zinc-800 text-xl text-zinc-200 transition-colors
+    [touch-action:none] [-webkit-tap-highlight-color:transparent]
+    hover:bg-zinc-700 sm:size-20;
+}
+
+.pad-btn[data-pressed] {
+  @apply border-cyan-400/60 bg-cyan-500/25 text-cyan-300;
+}
+
+#stop-btn[data-pressed] {
+  @apply !bg-red-500/40 !text-red-100;
+}
+
+.btn-ghost {
+  @apply rounded-lg border border-white/10 px-3 py-1.5 text-xs font-medium text-zinc-300
+    transition hover:bg-white/5 active:scale-95;
+}
+
+.field {
+  @apply block text-xs text-zinc-400;
+}
+
+.field > span {
+  @apply mb-1 block;
+}
+
+.field-input {
+  @apply w-full rounded-lg border border-white/10 bg-zinc-950 px-3 py-2 text-sm text-zinc-100
+    outline-none transition focus:border-cyan-500/60;
+}
+
+.kbd {
+  @apply rounded border border-white/15 bg-zinc-800 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300;
+}
+
+.slider {
+  @apply h-2 w-full cursor-pointer appearance-none rounded-full bg-zinc-800 accent-cyan-500;
+}

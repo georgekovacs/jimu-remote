@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#09090b" />
+    <title>Jimu Remote — Web Bluetooth Controller</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>" />
+  </head>
+  <body class="min-h-dvh bg-zinc-950 text-zinc-100 antialiased [touch-action:manipulation] selection:bg-cyan-500/30">
+    <!-- ═══ Header ═══ -->
+    <header class="sticky top-0 z-10 border-b border-white/10 bg-zinc-950/80 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <div class="grid size-9 place-items-center rounded-xl bg-cyan-500/15 text-lg">🤖</div>
+        <div class="mr-auto leading-tight">
+          <h1 class="whitespace-nowrap text-base font-semibold tracking-tight">Jimu Remote</h1>
+          <p class="hidden text-xs text-zinc-500 sm:block">Web Bluetooth controller</p>
+        </div>
+
+        <div id="status-pill" class="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-900 px-3 py-1.5 text-xs font-medium">
+          <span id="status-dot" class="size-2 shrink-0 rounded-full bg-zinc-500"></span>
+          <span id="status-text" class="max-[480px]:hidden">Disconnected</span>
+        </div>
+
+        <button
+          id="connect-btn"
+          class="whitespace-nowrap rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400 active:scale-95 disabled:opacity-50"
+        >
+          Connect Robot
+        </button>
+      </div>
+    </header>
+
+    <main class="mx-auto grid max-w-6xl grid-cols-1 gap-4 p-4 md:grid-cols-2 xl:grid-cols-3">
+      <!-- Shown only when navigator.bluetooth is missing -->
+      <div id="unsupported-banner" class="hidden rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-200 md:col-span-2 xl:col-span-3">
+        <strong>Web Bluetooth isn’t available in this browser.</strong>
+        Use Chrome or Edge on desktop/Android, or the <em>Bluefy</em> browser on iOS.
+        The page must be served over HTTPS (or localhost).
+      </div>
+
+      <!-- ═══ Drive card ═══ -->
+      <section class="card">
+        <h2 class="card-title">Drive</h2>
+
+        <div class="mx-auto grid w-fit grid-cols-3 gap-2 py-2" id="dpad">
+          <div></div>
+          <button class="pad-btn" data-direction="forward" aria-label="Forward">▲</button>
+          <div></div>
+
+          <button class="pad-btn" data-direction="left" aria-label="Turn left">◀</button>
+          <button id="stop-btn" class="pad-btn !border-red-500/40 !bg-red-500/15 !text-red-300 text-sm font-bold tracking-widest" aria-label="Stop">STOP</button>
+          <button class="pad-btn" data-direction="right" aria-label="Turn right">▶</button>
+
+          <div></div>
+          <button class="pad-btn" data-direction="backward" aria-label="Backward">▼</button>
+          <div></div>
+        </div>
+
+        <label class="mt-4 block">
+          <span class="flex items-baseline justify-between text-xs text-zinc-400">
+            Drive speed <output id="drive-speed-value" class="font-mono text-cyan-400"></output>
+          </span>
+          <input id="drive-speed" type="range" min="30" max="255" step="1" class="slider mt-1" />
+        </label>
+
+        <p class="mt-4 hidden items-center gap-1.5 text-xs text-zinc-500 md:flex">
+          Keyboard:
+          <kbd class="kbd">W</kbd><kbd class="kbd">A</kbd><kbd class="kbd">S</kbd><kbd class="kbd">D</kbd>
+          or arrows · release&nbsp;=&nbsp;stop
+        </p>
+      </section>
+
+      <!-- ═══ Servo card ═══ -->
+      <section class="card">
+        <div class="flex items-center justify-between">
+          <h2 class="card-title">Servo test</h2>
+          <button id="center-servos" class="btn-ghost">Center all</button>
+        </div>
+        <div id="servo-list" class="mt-2 space-y-3"></div>
+      </section>
+
+      <!-- ═══ Eyes card ═══ -->
+      <section class="card">
+        <h2 class="card-title">LED eyes</h2>
+        <label class="mt-2 flex items-center gap-3 text-sm text-zinc-300">
+          <input id="eye-color" type="color" value="#22d3ee" class="size-9 cursor-pointer rounded-lg border border-white/10 bg-zinc-900 p-1" />
+          Animation colour
+        </label>
+        <div id="eye-animations" class="mt-3 grid grid-cols-2 gap-2"></div>
+      </section>
+
+      <!-- ═══ Settings card ═══ -->
+      <details class="card md:col-span-2 xl:col-span-2" id="settings-panel">
+        <summary class="card-title cursor-pointer select-none">⚙️ Settings — UUIDs &amp; servo layout</summary>
+        <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <label class="field">
+            <span>Device name prefix</span>
+            <input id="set-namePrefix" type="text" class="field-input" placeholder="JIMU" />
+          </label>
+          <label class="field">
+            <span>Exact broadcast name <em class="text-zinc-600">(optional)</em></span>
+            <input id="set-exactName" type="text" class="field-input" placeholder="e.g. Jimu_Box_1a2b" />
+          </label>
+          <label class="field sm:col-span-2">
+            <span>Service UUID</span>
+            <input id="set-serviceUuid" type="text" class="field-input font-mono" spellcheck="false" />
+          </label>
+          <label class="field sm:col-span-2">
+            <span>Characteristic UUID</span>
+            <input id="set-characteristicUuid" type="text" class="field-input font-mono" spellcheck="false" />
+          </label>
+          <label class="field">
+            <span>Left wheel servo ID</span>
+            <input id="set-leftWheelId" type="number" min="1" max="32" class="field-input" />
+          </label>
+          <label class="field">
+            <span>Right wheel servo ID</span>
+            <input id="set-rightWheelId" type="number" min="1" max="32" class="field-input" />
+          </label>
+          <label class="field">
+            <span>Articulation servo count</span>
+            <input id="set-servoCount" type="number" min="0" max="16" class="field-input" />
+          </label>
+          <label class="mt-1 flex items-center gap-2 text-sm text-zinc-300">
+            <input id="set-invertRightWheel" type="checkbox" class="size-4 accent-cyan-500" />
+            Invert right wheel (mirrored mounting)
+          </label>
+        </div>
+        <button id="reset-settings" class="btn-ghost mt-4">Reset to defaults</button>
+      </details>
+
+      <!-- ═══ Packet console ═══ -->
+      <section class="card xl:col-span-1 md:col-span-2">
+        <div class="flex items-center justify-between">
+          <h2 class="card-title">Packet console</h2>
+          <button id="clear-log" class="btn-ghost">Clear</button>
+        </div>
+        <div id="packet-log" class="mt-2 h-48 space-y-0.5 overflow-y-auto font-mono text-[11px] leading-relaxed text-zinc-400"></div>
+      </section>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
