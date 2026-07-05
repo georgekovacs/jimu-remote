@@ -6,9 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -17,9 +15,6 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,14 +23,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - uses: actions/configure-pages@v5
+      # Publish dist/ to the gh-pages branch; GitHub Pages serves it from
+      # there (Settings → Pages → Deploy from a branch: gh-pages).
+      - uses: peaceiris/actions-gh-pages@v4
         with:
-          # Create/repair the Pages site from inside the workflow — sites
-          # pre-created via the REST API can get stuck in a state where
-          # every deployment fails with "try again later".
-          enablement: true
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
