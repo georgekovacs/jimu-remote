@@ -3,6 +3,10 @@
 A minimalist single-page Web Bluetooth remote controller for UBTECH Jimu
 robot kits — built for kids stuck with broken legacy apps.
 
+**Live app: <https://georgekovacs.github.io/jimu-remote/>** — open it in
+Chrome/Edge (desktop or Android) or Bluefy (iOS) and press *Connect Robot*.
+Every push to `main` redeploys automatically via GitHub Actions.
+
 ## Quick start
 
 ```sh
